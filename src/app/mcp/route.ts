@@ -1,18 +1,23 @@
-import { auth } from "@clerk/nextjs/server";
-import { verifyClerkToken } from "@clerk/mcp-tools/next";
+import { createRemoteJWKSet, jwtVerify } from "jose";
 import { xmcpHandler, withAuth, VerifyToken } from "@xmcp/adapter";
 
 /**
  * Verify the bearer token and return auth information
  * In a real implementation, this would validate against your auth service
  */
-const verifyToken: VerifyToken = async (req: Request, bearerToken?: string) => {
-  if (!bearerToken) return undefined;
+const AUTHKIT_ISSUER = (process.env.AUTHKIT_BASE_URL || "").replace(/\/+$/, "");
+const JWKS = createRemoteJWKSet(new URL(`${AUTHKIT_ISSUER}/oauth2/jwks`));
 
-  // TODO: Replace with actual token verification logic
-  // This is just an example implementation
-  const clerkAuth = await auth({ acceptsToken: "oauth_token" as const });
-  return verifyClerkToken(clerkAuth as any, bearerToken);
+const verifyToken: VerifyToken = async (_req: Request, bearerToken?: string) => {
+  if (!bearerToken) return undefined;
+  try {
+    const { payload } = await jwtVerify(bearerToken, JWKS, {
+      issuer: AUTHKIT_ISSUER,
+    });
+    return payload as any;
+  } catch {
+    return undefined;
+  }
 };
 
 const options = {
