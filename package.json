@@ -12,8 +12,8 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@clerk/mcp-tools": "^0.3.1",
-    "@clerk/nextjs": "^6.33.3",
+    "@auth0/nextjs-auth0": "^4.10.0",
+    "jose": "^5.10.0",
     "next": "15.5.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
@@ -25,7 +25,7 @@
     "@tailwindcss/postcss": "^4.1.14",
     "@types/node": "^20.19.21",
     "@types/react": "^19.2.2",
-    "@types/react-dom": "^19.2.1",
+    "@types/react-dom": "^19.2.2",
     "eslint": "^9.37.0",
     "eslint-config-next": "15.3.5",
     "swc-loader": "^0.2.6",

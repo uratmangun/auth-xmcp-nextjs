@@ -1,11 +1,21 @@
-import { clerkMiddleware } from "@clerk/nextjs/server";
+import { Auth0Client } from '@auth0/nextjs-auth0/server';
 
-export default clerkMiddleware();
+const auth0 = new Auth0Client({
+  authorizationParameters: {
+    scope: process.env.AUTH0_SCOPE || 'openid profile email',
+    audience: process.env.AUTH0_AUDIENCE,
+  },
+});
+
+import type { NextRequest } from 'next/server';
+
+export async function middleware(request: NextRequest) {
+  return auth0.middleware(request);
+}
 
 export const config = {
   matcher: [
-    '/((?!.+\\.[\\w]+$|_next).*)',
+    '/((?!.+\\.[\\w]+$|_next|\\.well-known|mcp).*)',
     '/',
-    '/(api|trpc)(.*)'
   ],
 };
