@@ -1,30 +1,52 @@
-import { metadataCorsOptionsRequestHandler } from "@clerk/mcp-tools/next";
+import { NextResponse } from "next/server";
 
-const corsHandler = metadataCorsOptionsRequestHandler();
-
-const handler = async (req: Request) => {
-  const origin = new URL(req.url).origin;
-  const authServerResp = await fetch(
-    origin + "/.well-known/oauth-authorization-server",
-    { headers: { accept: "application/json" } }
-  );
-  if (!authServerResp.ok) {
-    return new Response("Authorization server metadata not available", {
-      status: authServerResp.status,
+/**
+ * OpenID Connect Discovery
+ * Proxies to Better Auth's native OIDC configuration
+ */
+export async function GET(request: Request) {
+  const baseUrl = process.env.BETTER_AUTH_BASE_URL || "http://localhost:3000";
+  
+  try {
+    // Fetch Better Auth's native OIDC configuration
+    const response = await fetch(`${baseUrl}/api/auth/.well-known/openid-configuration`, {
+      headers: {
+        "Accept": "application/json",
+      },
     });
+
+    if (!response.ok) {
+      throw new Error(`Better Auth OIDC config returned ${response.status}`);
+    }
+
+    const metadata = await response.json();
+
+    return NextResponse.json(metadata, {
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Access-Control-Allow-Headers": "Authorization, Content-Type",
+        "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+        "Pragma": "no-cache",
+      },
+    });
+  } catch (error) {
+    console.error("Failed to fetch Better Auth OIDC config:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch OIDC configuration" },
+      { status: 500 }
+    );
   }
-  const meta = (await authServerResp.json()) as any;
-  const issuer = meta.issuer as string;
-  const url = issuer.replace(/\/+$/, "") + "/.well-known/openid-configuration";
-  const upstream = await fetch(url, { headers: { accept: "application/json" } });
-  const body = await upstream.text();
-  return new Response(body, {
-    status: upstream.status,
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
     headers: {
-      "content-type": "application/json",
-      "access-control-allow-origin": "*",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, OPTIONS",
+      "Access-Control-Allow-Headers": "Authorization, Content-Type",
     },
   });
-};
-
-export { handler as GET, corsHandler as OPTIONS };
+}

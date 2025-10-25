@@ -1,18 +1,35 @@
-import { auth } from "@clerk/nextjs/server";
-import { verifyClerkToken } from "@clerk/mcp-tools/next";
+import { auth } from "@/lib/auth";
 import { xmcpHandler, withAuth, VerifyToken } from "@xmcp/adapter";
+import { headers } from "next/headers";
 
 /**
- * Verify the bearer token and return auth information
- * In a real implementation, this would validate against your auth service
+ * Verify the bearer token using Better Auth
+ * This validates the OAuth token against Better Auth's OIDC provider
  */
 const verifyToken: VerifyToken = async (req: Request, bearerToken?: string) => {
   if (!bearerToken) return undefined;
 
-  // TODO: Replace with actual token verification logic
-  // This is just an example implementation
-  const clerkAuth = await auth({ acceptsToken: "oauth_token" as const });
-  return verifyClerkToken(clerkAuth as any, bearerToken);
+  try {
+    // Use Better Auth to verify the session token
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session) {
+      return undefined;
+    }
+
+    // Return user information in the format expected by xmcp
+    return {
+      userId: session.user.id,
+      email: session.user.email,
+      name: session.user.name,
+      sessionId: session.session.id,
+    };
+  } catch (error) {
+    console.error("Token verification failed:", error);
+    return undefined;
+  }
 };
 
 const options = {

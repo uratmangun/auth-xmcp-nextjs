@@ -1,6 +1,5 @@
-import { authServerMetadataHandlerClerk, metadataCorsOptionsRequestHandler } from "@clerk/mcp-tools/next";
-
-const handler = authServerMetadataHandlerClerk();
-const corsHandler = metadataCorsOptionsRequestHandler();
-
-export { handler as GET, corsHandler as OPTIONS };
+/**
+ * MCP OAuth Authorization Server Metadata
+ * Redirects to main authorization server metadata endpoint
+ */
+export { GET, OPTIONS } from "../route";

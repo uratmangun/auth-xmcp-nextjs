@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { ParaProvider } from "@/components/providers/para-provider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -13,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Auth XMCP - Clerk Authentication for MCP",
-  description: "Secure MCP endpoints with Clerk authentication. OAuth-protected Model Context Protocol server with Next.js 15 and XMCP adapter.",
+  title: "Auth XMCP - Better Auth + OIDC + Para Wallet",
+  description: "Secure MCP endpoints with Better Auth OIDC Provider. OAuth-protected Model Context Protocol server with Next.js 15, Drizzle ORM, and Para wallet integration.",
 };
 
 export default function RootLayout({
@@ -27,7 +28,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <ParaProvider>
+          {children}
+        </ParaProvider>
       </body>
     </html>
   );

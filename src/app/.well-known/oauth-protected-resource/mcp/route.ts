@@ -1,6 +1,5 @@
-import { protectedResourceHandlerClerk, metadataCorsOptionsRequestHandler } from "@clerk/mcp-tools/next";
-
-const handler = protectedResourceHandlerClerk();
-const corsHandler = metadataCorsOptionsRequestHandler();
-
-export { handler as GET, corsHandler as OPTIONS };
+/**
+ * MCP OAuth Protected Resource Metadata
+ * Redirects to main protected resource metadata endpoint
+ */
+export { GET, OPTIONS } from "../route";

@@ -1,6 +1,6 @@
 # Auth XMCP Next.js
 
-A Next.js 15 application that pairs [Clerk](https://clerk.com/) authentication with XMCP adapters to expose OAuth-protected MCP endpoints and machine-readable discovery metadata. The project ships with production-ready middleware, token verification, and Vercel deployment settings.
+A Next.js 15 application that integrates [Better Auth](https://www.better-auth.com/) with OIDC Provider plugin and [Para](https://getpara.com/) social login wallet to expose OAuth-protected MCP endpoints. Features custom OIDC provider, dynamic client registration, and seamless crypto wallet integration.
 
 ## Table of Contents
 - [Getting Started](#getting-started)
@@ -15,9 +15,16 @@ A Next.js 15 application that pairs [Clerk](https://clerk.com/) authentication w
 - [License](#license)
 
 ## Getting Started
-- **Clone**: `git clone https://github.com/uratmangun/auth-xmcp-nextjs.git`
-- **Install dependencies**: `bun install`
-- **Set environment variables**: copy `.env.example` to `.env.local` and fill in the values described in [Configuration](#configuration).
+
+### Quick Start
+1. **Clone**: `git clone https://github.com/uratmangun/auth-xmcp-nextjs.git`
+2. **Install dependencies**: `bun install`
+3. **Set up database**: `./scripts/setup-db.sh`
+4. **Configure environment**: Copy `.env.example` to `.env` and fill in required values
+5. **Generate secret**: `openssl rand -base64 32`
+6. **Start dev server**: `bun run dev`
+
+📖 **See [SETUP.md](./SETUP.md) for detailed setup instructions**
 
 ## Project Scripts
 - **Start dev server**: `bun run dev`
@@ -28,57 +35,201 @@ A Next.js 15 application that pairs [Clerk](https://clerk.com/) authentication w
 ## Project Structure
 ```
 .
-├── public/                   # Static assets used by the Next.js app
+├── database/
+│   └── schema.sql            # PostgreSQL schema for Better Auth
+├── scripts/
+│   └── setup-db.sh           # Database setup script
 ├── src/
 │   ├── app/
-│   │   ├── page.tsx          # Landing page content
-│   │   ├── mcp/route.ts      # MCP handler protected by Clerk auth
-│   │   └── .well-known/      # OAuth + OpenID discovery endpoints
-│   ├── middleware.ts         # Global Clerk middleware configuration
+│   │   ├── api/auth/
+│   │   │   ├── [...all]/route.ts        # Better Auth API handler
+│   │   │   └── link-para-wallet/route.ts # Para wallet linking
+│   │   ├── mcp/route.ts      # MCP handler with Better Auth
+│   │   ├── sign-in/page.tsx  # Sign-in page example
+│   │   └── .well-known/      # OIDC discovery endpoints
+│   ├── lib/
+│   │   ├── auth.ts           # Better Auth server config
+│   │   ├── auth-client.ts    # Better Auth client
+│   │   └── para-integration.ts # Para wallet bridge
+│   ├── middleware.ts         # Auth middleware
 │   ├── prompts/              # XMCP prompt definitions
 │   ├── resources/            # XMCP resource resolvers
 │   └── tools/                # XMCP tool implementations
+├── SETUP.md                  # Comprehensive setup guide
+├── MIGRATION.md              # Migration from Clerk guide
+├── CHANGES.md                # Detailed changelog
 ├── xmcp.config.ts            # XMCP runtime configuration
-├── package.json              # Scripts and dependency manifest
-├── bun.lock                  # Bun lockfile (package manager resolution)
-└── README.md
+└── package.json              # Scripts and dependencies
 ```
 
 ## Key Features
-- **Clerk-secured MCP endpoints** via `src/app/mcp/route.ts`, using `verifyClerkToken()` to authenticate bearer tokens.
-- **OAuth discovery metadata** served from `.well-known/` routes for authorization server, protected resource, and OpenID configuration.
-- **Next.js middleware integration** with `src/middleware.ts` applying `clerkMiddleware()` across dynamic routes.
-- **XMCP adapter support** driven by `xmcp.config.ts`, enabling XMCP dev/build workflows alongside Next.js.
+
+### 🔐 Authentication
+- **Better Auth** - Full-featured authentication framework
+- **OIDC Provider** - Act as your own OpenID Connect provider
+- **Email/Password** - Traditional authentication
+- **Social OAuth** - Google, and more (extensible)
+- **Session Management** - Database-backed sessions with full control
+
+### 🌐 OIDC Provider
+- **Dynamic Client Registration** - RFC 7591 compliant
+- **Authorization Code Flow** - OAuth 2.0 standard flow
+- **Token Management** - Access tokens + refresh tokens
+- **UserInfo Endpoint** - Standard OIDC user information
+- **JWKS Endpoint** - Public key discovery (in development)
+- **Consent Screens** - User authorization flow
+
+### 💰 Para Wallet Integration
+- **Automatic Wallet Creation** - Create crypto wallets on sign-up
+- **Email-Based Linking** - Link wallets via user email
+- **Social OAuth + Wallet** - Combined authentication and wallet flow
+- **Multi-Chain Support** - EVM, Solana, Cosmos
+
+### 🔧 MCP Integration
+- **OAuth-Protected Endpoints** - Secure MCP tools, resources, and prompts
+- **Bearer Token Authentication** - Standard OAuth 2.0 bearer tokens
+- **Discovery Metadata** - RFC 8414 compliant metadata endpoints
+- **XMCP Adapter** - Seamless integration with XMCP framework
 
 ## Technologies Used
-- Next.js 15 (App Router, Turbopack dev server)
-- React 19
-- Clerk (`@clerk/nextjs`, `@clerk/mcp-tools`)
-- XMCP adapter (`@xmcp/adapter`, configured via `xmcp.config.ts`)
-- Bun (dependency management and script runner)
-- TypeScript, ESLint, Tailwind CSS (PostCSS pipeline)
+- **Next.js 15** - App Router, Turbopack dev server
+- **React 19** - Latest React features
+- **Better Auth** - Authentication framework with OIDC Provider plugin
+- **PostgreSQL** - Database for auth data (users, sessions, tokens)
+- **Para** - Social login wallet integration
+- **XMCP** - Model Context Protocol adapter
+- **Bun** - Fast package manager and runtime
+- **TypeScript** - Type-safe development
+- **Tailwind CSS** - Utility-first styling
 
 ## Configuration
-Create `.env.local` using the provided `.env.example` template and supply the required credentials:
 
-```
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_...
-CLERK_SECRET_KEY=sk_live_...
+Create `.env` using the provided `.env.example` template:
+
+### Required
+```env
+DATABASE_URL=postgresql://user:password@localhost:5432/auth_xmcp
+BETTER_AUTH_SECRET=your-secret-key-min-32-chars
+BETTER_AUTH_BASE_URL=http://localhost:3000
+NEXT_PUBLIC_BETTER_AUTH_BASE_URL=http://localhost:3000
 ```
 
-These keys power Clerk's client and server SDKs during development and production builds.
+### Optional (Social OAuth)
+```env
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+```
+
+### Optional (Para Wallet)
+```env
+NEXT_PUBLIC_PARA_API_KEY=your-para-api-key
+PARA_CLIENT_ID=your-para-client-id
+PARA_CLIENT_SECRET=your-para-client-secret
+```
+
+📖 **See [SETUP.md](./SETUP.md) for detailed configuration**
 
 ## Usage
-1. **Local development**: `bun run dev`
-   - Runs XMCP dev server alongside Next.js (`xmcp dev & next dev --turbopack`).
-   - Visit `http://localhost:3000` for the app UI.
-2. **MCP endpoint testing**: send authenticated requests to `http://localhost:3000/mcp` with a valid Clerk bearer token. The handler is defined in `src/app/mcp/route.ts`.
-3. **Discovery metadata**: inspect `.well-known/` routes (e.g., `/.well-known/openid-configuration`) for OAuth/OpenID documents generated by the app.
+
+### Local Development
+```bash
+bun run dev
+```
+Runs XMCP dev server alongside Next.js. Visit `http://localhost:3000`
+
+### OIDC Endpoints
+- **Discovery**: `/.well-known/openid-configuration`
+- **Authorization**: `/api/auth/authorize`
+- **Token**: `/api/auth/token`
+- **UserInfo**: `/api/auth/userinfo`
+- **JWKS**: `/.well-known/jwks.json`
+- **Register Client**: `/api/auth/oauth2/register`
+
+### MCP Authentication Flow
+
+1. **Register OAuth Client**
+```typescript
+const app = await authClient.oauth2.register({
+  client_name: "My MCP Client",
+  redirect_uris: ["http://localhost:3000/callback"],
+});
+```
+
+2. **Get Authorization Code**
+```
+GET /api/auth/authorize?
+  client_id=CLIENT_ID&
+  redirect_uri=REDIRECT_URI&
+  response_type=code&
+  scope=openid profile email
+```
+
+3. **Exchange for Access Token**
+```bash
+curl -X POST http://localhost:3000/api/auth/token \
+  -d "grant_type=authorization_code" \
+  -d "code=AUTH_CODE" \
+  -d "client_id=CLIENT_ID" \
+  -d "client_secret=CLIENT_SECRET"
+```
+
+4. **Access MCP Endpoint**
+```bash
+curl http://localhost:3000/mcp \
+  -H "Authorization: Bearer ACCESS_TOKEN"
+```
+
+### Para Wallet Integration
+
+```typescript
+// After Better Auth sign-in
+const session = await authClient.getSession();
+
+if (session?.user?.email) {
+  // Initialize Para wallet
+  const walletInfo = await paraClientIntegration.initializeWallet(
+    session.user.email
+  );
+  
+  // Link to user
+  if (walletInfo) {
+    await paraClientIntegration.linkWallet(
+      session.user.email,
+      walletInfo.walletId
+    );
+  }
+}
+```
+
+📖 **See [SETUP.md](./SETUP.md) for complete usage examples**
 
 ## Deployment
-- **Vercel**: The project is configured for Vercel (`bun run build` runs `xmcp build && next build`).
-- **Environment**: Set `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` in the Vercel production environment (`vc env add ...`).
-- **Trigger production deploy**: `vc deploy --prod`.
+
+### Vercel
+1. **Set environment variables** in Vercel dashboard:
+   - `DATABASE_URL`
+   - `BETTER_AUTH_SECRET`
+   - `BETTER_AUTH_BASE_URL`
+   - `NEXT_PUBLIC_BETTER_AUTH_BASE_URL`
+   - Optional: OAuth provider credentials
+
+2. **Deploy**:
+```bash
+vc deploy --prod
+```
+
+### Database
+Use a managed PostgreSQL service:
+- [Neon](https://neon.tech/) - Serverless PostgreSQL
+- [Supabase](https://supabase.com/) - Open source Firebase alternative
+- [Railway](https://railway.app/) - Simple deployment platform
+
+### Security Checklist
+- ✅ Use HTTPS in production (required for OIDC)
+- ✅ Rotate `BETTER_AUTH_SECRET` regularly
+- ✅ Enable database SSL
+- ✅ Set secure CORS policies
+- ✅ Store Para recovery secrets securely
 
 ## Contributing
 Pull requests and issues are welcome. Please open a ticket describing proposed changes before submitting large contributions.

@@ -24,3 +24,10 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Para modal overlay fix - prevent blocking UI when modal should be hidden */
+cpsl-auth-modal.para-modal-hidden {
+  display: none !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}

@@ -1,0 +1,61 @@
+🔐 feat: Replace Clerk with Better Auth + OIDC + Para wallet integration
+
+Major Changes:
+- Migrated from Clerk to Better Auth with OIDC Provider plugin
+- Integrated Para social login wallet for crypto wallet creation
+- PostgreSQL database for authentication data
+- Custom OIDC provider for MCP authentication
+- Dynamic OAuth client registration
+- Social OAuth (Google) + wallet flow
+
+Files Created:
+- src/lib/auth.ts - Better Auth server configuration
+- src/lib/auth-client.ts - Better Auth client setup
+- src/lib/para-integration.ts - Para wallet bridge
+- src/app/api/auth/[...all]/route.ts - Auth API handler
+- src/app/api/auth/link-para-wallet/route.ts - Wallet linking API
+- src/app/sign-in/page.tsx - Sign-in page example
+- database/schema.sql - PostgreSQL schema
+- scripts/setup-db.sh - Database setup script
+- SETUP.md - Comprehensive setup guide
+- MIGRATION.md - Migration from Clerk guide
+- CHANGES.md - Detailed changelog
+
+Files Modified:
+- src/app/mcp/route.ts - Better Auth token verification
+- src/middleware.ts - Custom auth middleware
+- src/app/.well-known/oauth-protected-resource/route.ts - OAuth metadata
+- package.json - Updated dependencies
+- .env.example - New environment variables
+
+Dependencies:
+Added: better-auth@^1.3.30, pg@^8.16.3, @types/pg@^8.15.5
+Removed: @clerk/nextjs, @clerk/mcp-tools
+
+Architecture:
+User → Better Auth (OIDC Provider) → MCP Server
+                ↓
+          Para Wallet
+
+OIDC Endpoints:
+- /.well-known/openid-configuration
+- /api/auth/authorize
+- /api/auth/token
+- /api/auth/userinfo
+- /.well-known/jwks.json
+
+Setup Required:
+1. PostgreSQL database
+2. Run database/schema.sql
+3. Configure .env with DATABASE_URL and BETTER_AUTH_SECRET
+4. Run: bun install && bun run dev
+
+See SETUP.md for detailed setup instructions
+See MIGRATION.md for migration guide from Clerk
+See CHANGES.md for complete changelog
+
+Breaking Changes:
+- Clerk authentication removed
+- New PostgreSQL database required
+- Environment variables changed
+- Session structure different
