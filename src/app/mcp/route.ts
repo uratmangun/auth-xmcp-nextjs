@@ -7,12 +7,30 @@ import { xmcpHandler, withAuth, VerifyToken } from "@xmcp/adapter";
  * In a real implementation, this would validate against your auth service
  */
 const verifyToken: VerifyToken = async (req: Request, bearerToken?: string) => {
-  if (!bearerToken) return undefined;
+  console.log("verifyToken called");
+  console.log("Bearer token:", bearerToken ? `${bearerToken.substring(0, 10)}...` : "undefined");
+  console.log("Request headers:", Object.fromEntries(req.headers.entries()));
 
-  // TODO: Replace with actual token verification logic
-  // This is just an example implementation
-  const clerkAuth = await auth({ acceptsToken: "oauth_token" as const });
-  return verifyClerkToken(clerkAuth as any, bearerToken);
+  if (!bearerToken) {
+    console.log("No bearer token provided");
+    return undefined;
+  }
+
+  try {
+    // TODO: Replace with actual token verification logic
+    // This is just an example implementation
+    console.log("Calling auth()...");
+    const clerkAuth = await auth({ acceptsToken: "oauth_token" as const });
+    console.log("Clerk auth result:", JSON.stringify(clerkAuth, null, 2));
+    
+    console.log("Calling verifyClerkToken()...");
+    const result = await verifyClerkToken(clerkAuth as any, bearerToken);
+    console.log("Verification result:", result);
+    return result;
+  } catch (error) {
+    console.error("Error in verifyToken:", error);
+    return undefined;
+  }
 };
 
 const options = {
