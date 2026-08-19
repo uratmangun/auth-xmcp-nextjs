@@ -1,10 +1,6 @@
 {
   "mcpServers": {
-    "coba":{
-
-      "url":"http://localhost:3000/mcp"
-    },
-    "blockscout": {
+      "blockscout": {
       "url": "https://mcp.blockscout.com/mcp",
       "disabled": true
     },
